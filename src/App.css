@@ -250,7 +250,7 @@ h1 {
 
 .comparison-item li {
   padding: 0.5rem 0;
-  color: #eee;
+  color: #111;
   line-height: 1.6;
   position: relative;
   padding-left: 1.5rem;
@@ -283,7 +283,7 @@ h1 {
 .comparison-note p {
   margin: 0;
   text-align: left;
-  color: #eee;
+  color: #111;
   line-height: 1.8;
 }
 
