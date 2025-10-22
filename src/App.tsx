@@ -1,4 +1,4 @@
-import { useState, Activity, useEffect, useCallback, useRef } from "react";
+import { useState, Activity, useEffect, useRef } from "react";
 import "./App.css";
 
 /**
@@ -7,31 +7,15 @@ import "./App.css";
 interface PerformanceMetrics {
   renderTime: number;
   memoryUsed: number | null;
-  mountCount: number;
 }
 
 /**
  * タブコンテンツコンポーネント
  * 各タブはカウンターとテキスト入力を持つ
  */
-const TabContent = ({
-  name,
-  onMount,
-}: {
-  name: string;
-  onMount?: () => void;
-}) => {
+const TabContent = ({ name }: { name: string }) => {
   const [count, setCount] = useState(0);
   const [text, setText] = useState("");
-
-  useEffect(() => {
-    // コンポーネントの初回マウント時のみ実行
-    // Activity hiddenモードではeffectsがアンマウントされるが、
-    // コンポーネント自体は保持されるため、真のマウント時のみカウント
-    console.log(`${name} mounted`);
-    onMount?.();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   return (
     <div className="tab-content">
@@ -66,11 +50,6 @@ const ActivityMode = ({
   activeTab: "tab1" | "tab2" | "tab3";
   onMetricsUpdate: (metrics: PerformanceMetrics) => void;
 }) => {
-  const [metrics, setMetrics] = useState<PerformanceMetrics>({
-    renderTime: 0,
-    memoryUsed: null,
-    mountCount: 0,
-  });
   const switchStartTime = useRef(performance.now());
 
   const handleTabSwitch = () => {
@@ -79,13 +58,10 @@ const ActivityMode = ({
       (performance as unknown as { memory?: { usedJSHeapSize: number } })
         .memory?.usedJSHeapSize || null;
 
-    const newMetrics = {
-      ...metrics,
+    onMetricsUpdate({
       renderTime,
       memoryUsed,
-    };
-    setMetrics(newMetrics);
-    onMetricsUpdate(newMetrics);
+    });
     switchStartTime.current = performance.now();
   };
 
@@ -94,22 +70,18 @@ const ActivityMode = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
-  const handleMount = useCallback(() => {
-    setMetrics((prev) => ({ ...prev, mountCount: prev.mountCount + 1 }));
-  }, []);
-
   return (
     <>
       <Activity mode={activeTab === "tab1" ? "visible" : "hidden"}>
-        <TabContent name="Tab 1 Content" onMount={handleMount} />
+        <TabContent name="Tab 1 Content" />
       </Activity>
 
       <Activity mode={activeTab === "tab2" ? "visible" : "hidden"}>
-        <TabContent name="Tab 2 Content" onMount={handleMount} />
+        <TabContent name="Tab 2 Content" />
       </Activity>
 
       <Activity mode={activeTab === "tab3" ? "visible" : "hidden"}>
-        <TabContent name="Tab 3 Content" onMount={handleMount} />
+        <TabContent name="Tab 3 Content" />
       </Activity>
     </>
   );
@@ -126,11 +98,6 @@ const ConditionalMode = ({
   activeTab: "tab1" | "tab2" | "tab3";
   onMetricsUpdate: (metrics: PerformanceMetrics) => void;
 }) => {
-  const [metrics, setMetrics] = useState<PerformanceMetrics>({
-    renderTime: 0,
-    memoryUsed: null,
-    mountCount: 0,
-  });
   const switchStartTime = useRef(performance.now());
 
   const handleTabSwitch = () => {
@@ -139,13 +106,10 @@ const ConditionalMode = ({
       (performance as unknown as { memory?: { usedJSHeapSize: number } })
         .memory?.usedJSHeapSize || null;
 
-    const newMetrics = {
-      ...metrics,
+    onMetricsUpdate({
       renderTime,
       memoryUsed,
-    };
-    setMetrics(newMetrics);
-    onMetricsUpdate(newMetrics);
+    });
     switchStartTime.current = performance.now();
   };
 
@@ -154,21 +118,11 @@ const ConditionalMode = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
-  const handleMount = useCallback(() => {
-    setMetrics((prev) => ({ ...prev, mountCount: prev.mountCount + 1 }));
-  }, []);
-
   return (
     <>
-      {activeTab === "tab1" && (
-        <TabContent name="Tab 1 Content" onMount={handleMount} />
-      )}
-      {activeTab === "tab2" && (
-        <TabContent name="Tab 2 Content" onMount={handleMount} />
-      )}
-      {activeTab === "tab3" && (
-        <TabContent name="Tab 3 Content" onMount={handleMount} />
-      )}
+      {activeTab === "tab1" && <TabContent name="Tab 1 Content" />}
+      {activeTab === "tab2" && <TabContent name="Tab 2 Content" />}
+      {activeTab === "tab3" && <TabContent name="Tab 3 Content" />}
     </>
   );
 };
@@ -188,7 +142,7 @@ const MetricsDisplay = ({
       <h3>{mode}</h3>
       <div className="metrics-grid">
         <div className="metric-item">
-          <span className="metric-label">タブ切り替え時間:</span>
+          <span className="metric-label">切り替え時間:</span>
           <span className="metric-value">{metrics.renderTime.toFixed(2)}ms</span>
         </div>
         <div className="metric-item">
@@ -198,10 +152,6 @@ const MetricsDisplay = ({
               ? `${(metrics.memoryUsed / 1024 / 1024).toFixed(2)} MB`
               : "N/A"}
           </span>
-        </div>
-        <div className="metric-item">
-          <span className="metric-label">マウント回数:</span>
-          <span className="metric-value">{metrics.mountCount}</span>
         </div>
       </div>
     </div>
@@ -216,22 +166,20 @@ function App() {
   const [activityMetrics, setActivityMetrics] = useState<PerformanceMetrics>({
     renderTime: 0,
     memoryUsed: null,
-    mountCount: 0,
   });
   const [conditionalMetrics, setConditionalMetrics] =
     useState<PerformanceMetrics>({
       renderTime: 0,
       memoryUsed: null,
-      mountCount: 0,
     });
 
   return (
     <div className="app">
-      <h1>React 19.2 &lt;Activity /&gt; vs 従来の条件付きレンダリング</h1>
+      <h1>React 19.2 &lt;Activity /&gt; デモ</h1>
       <p className="description">
-        2つのレンダリング方式のパフォーマンスと動作を比較できます。
+        Activityコンポーネントは、状態を保持したままUIを表示/非表示できる新機能です。
         <br />
-        タブを切り替えて、それぞれの違いを確認してください。
+        タブを切り替えて、従来の条件付きレンダリングとの違いを体験してください。
       </p>
 
       <div className="mode-selector">
@@ -294,26 +242,32 @@ function App() {
       </div>
 
       <div className="info">
-        <h3>💡 主な違い</h3>
+        <h3>💡 Activityのメリット・デメリット</h3>
         <div className="comparison">
           <div className="comparison-item">
-            <h4>🚀 Activity モード</h4>
+            <h4>✅ メリット</h4>
             <ul>
-              <li>状態を保持: タブ切り替え後も入力内容が残る</li>
-              <li>マウント回数が少ない: 初回のみマウント</li>
-              <li>アンマウントなし: コンポーネントが破棄されない</li>
-              <li>高速な切り替え: DOMが保持されるため</li>
+              <li><strong>状態の保持</strong>: hiddenでもコンポーネント状態が保持される（カウンターや入力内容が消えない）</li>
+              <li><strong>高速な切り替え</strong>: DOMを破棄せず表示/非表示を切り替えるだけなので、切り替えが高速</li>
+              <li><strong>UX向上</strong>: 戻るナビゲーション時に入力内容やスクロール位置が保持される</li>
+              <li><strong>事前レンダリング</strong>: 次に表示する可能性のあるページを背景で準備できる</li>
             </ul>
           </div>
           <div className="comparison-item">
-            <h4>📦 条件付きレンダリング</h4>
+            <h4>⚠️ デメリット</h4>
             <ul>
-              <li>状態が失われる: タブ切り替えで入力内容がリセット</li>
-              <li>マウント回数が多い: 毎回マウント/アンマウント</li>
-              <li>アンマウント頻発: 非表示時に完全に破棄</li>
-              <li>切り替えコスト: 毎回DOM再構築が必要</li>
+              <li><strong>メモリ使用量増加</strong>: 全タブのDOMと状態を保持するため、メモリ消費が増える</li>
+              <li><strong>初回レンダリングコスト</strong>: 全タブが最初からレンダリングされるため、初期表示が重くなる可能性</li>
+              <li><strong>使いどころの見極め</strong>: 常に使うべきではなく、状態保持が必要な場合にのみ使う</li>
             </ul>
           </div>
+        </div>
+        <div className="comparison-note">
+          <p>
+            💡 <strong>使い分けのポイント</strong>:
+            ユーザーが頻繁に行き来するタブや、入力フォームなど状態を保持したい場合は<code>&lt;Activity /&gt;</code>が有効。
+            一方、一度きりの表示や大量のデータを扱う場合は、従来の条件付きレンダリングの方がメモリ効率が良い。
+          </p>
         </div>
       </div>
     </div>

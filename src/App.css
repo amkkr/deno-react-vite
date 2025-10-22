@@ -271,3 +271,22 @@ h1 {
   font-family: "Courier New", monospace;
   color: #646cff;
 }
+
+.comparison-note {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: rgba(100, 108, 255, 0.1);
+  border-left: 4px solid #646cff;
+  border-radius: 8px;
+}
+
+.comparison-note p {
+  margin: 0;
+  text-align: left;
+  color: #ccc;
+  line-height: 1.8;
+}
+
+.comparison-note strong {
+  color: #646cff;
+}
