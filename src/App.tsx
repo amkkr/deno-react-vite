@@ -8,7 +8,6 @@ interface PerformanceMetrics {
   renderTime: number;
   memoryUsed: number | null;
   mountCount: number;
-  unmountCount: number;
 }
 
 /**
@@ -18,11 +17,9 @@ interface PerformanceMetrics {
 const TabContent = ({
   name,
   onMount,
-  onUnmount,
 }: {
   name: string;
   onMount?: () => void;
-  onUnmount?: () => void;
 }) => {
   const [count, setCount] = useState(0);
   const [text, setText] = useState("");
@@ -32,12 +29,7 @@ const TabContent = ({
     const renderTime = performance.now() - renderStartTime.current;
     console.log(`${name} rendered in ${renderTime.toFixed(2)}ms`);
     onMount?.();
-
-    return () => {
-      console.log(`${name} unmounted`);
-      onUnmount?.();
-    };
-  }, [name, onMount, onUnmount]);
+  }, [name, onMount]);
 
   return (
     <div className="tab-content">
@@ -76,7 +68,6 @@ const ActivityMode = ({
     renderTime: 0,
     memoryUsed: null,
     mountCount: 0,
-    unmountCount: 0,
   });
   const switchStartTime = useRef(performance.now());
 
@@ -105,34 +96,18 @@ const ActivityMode = ({
     setMetrics((prev) => ({ ...prev, mountCount: prev.mountCount + 1 }));
   };
 
-  const handleUnmount = () => {
-    setMetrics((prev) => ({ ...prev, unmountCount: prev.unmountCount + 1 }));
-  };
-
   return (
     <>
       <Activity mode={activeTab === "tab1" ? "visible" : "hidden"}>
-        <TabContent
-          name="Tab 1 Content"
-          onMount={handleMount}
-          onUnmount={handleUnmount}
-        />
+        <TabContent name="Tab 1 Content" onMount={handleMount} />
       </Activity>
 
       <Activity mode={activeTab === "tab2" ? "visible" : "hidden"}>
-        <TabContent
-          name="Tab 2 Content"
-          onMount={handleMount}
-          onUnmount={handleUnmount}
-        />
+        <TabContent name="Tab 2 Content" onMount={handleMount} />
       </Activity>
 
       <Activity mode={activeTab === "tab3" ? "visible" : "hidden"}>
-        <TabContent
-          name="Tab 3 Content"
-          onMount={handleMount}
-          onUnmount={handleUnmount}
-        />
+        <TabContent name="Tab 3 Content" onMount={handleMount} />
       </Activity>
     </>
   );
@@ -152,7 +127,6 @@ const ConditionalMode = ({
     renderTime: 0,
     memoryUsed: null,
     mountCount: 0,
-    unmountCount: 0,
   });
   const switchStartTime = useRef(performance.now());
 
@@ -181,32 +155,16 @@ const ConditionalMode = ({
     setMetrics((prev) => ({ ...prev, mountCount: prev.mountCount + 1 }));
   };
 
-  const handleUnmount = () => {
-    setMetrics((prev) => ({ ...prev, unmountCount: prev.unmountCount + 1 }));
-  };
-
   return (
     <>
       {activeTab === "tab1" && (
-        <TabContent
-          name="Tab 1 Content"
-          onMount={handleMount}
-          onUnmount={handleUnmount}
-        />
+        <TabContent name="Tab 1 Content" onMount={handleMount} />
       )}
       {activeTab === "tab2" && (
-        <TabContent
-          name="Tab 2 Content"
-          onMount={handleMount}
-          onUnmount={handleUnmount}
-        />
+        <TabContent name="Tab 2 Content" onMount={handleMount} />
       )}
       {activeTab === "tab3" && (
-        <TabContent
-          name="Tab 3 Content"
-          onMount={handleMount}
-          onUnmount={handleUnmount}
-        />
+        <TabContent name="Tab 3 Content" onMount={handleMount} />
       )}
     </>
   );
@@ -242,10 +200,6 @@ const MetricsDisplay = ({
           <span className="metric-label">マウント回数:</span>
           <span className="metric-value">{metrics.mountCount}</span>
         </div>
-        <div className="metric-item">
-          <span className="metric-label">アンマウント回数:</span>
-          <span className="metric-value">{metrics.unmountCount}</span>
-        </div>
       </div>
     </div>
   );
@@ -260,14 +214,12 @@ function App() {
     renderTime: 0,
     memoryUsed: null,
     mountCount: 0,
-    unmountCount: 0,
   });
   const [conditionalMetrics, setConditionalMetrics] =
     useState<PerformanceMetrics>({
       renderTime: 0,
       memoryUsed: null,
       mountCount: 0,
-      unmountCount: 0,
     });
 
   return (
