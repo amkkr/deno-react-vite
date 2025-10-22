@@ -1,4 +1,4 @@
-import { useState, Activity, useEffect, useRef } from "react";
+import { useState, Activity, useEffect, useCallback, useRef } from "react";
 import "./App.css";
 
 /**
@@ -23,13 +23,15 @@ const TabContent = ({
 }) => {
   const [count, setCount] = useState(0);
   const [text, setText] = useState("");
-  const renderStartTime = useRef(performance.now());
 
   useEffect(() => {
-    const renderTime = performance.now() - renderStartTime.current;
-    console.log(`${name} rendered in ${renderTime.toFixed(2)}ms`);
+    // コンポーネントの初回マウント時のみ実行
+    // Activity hiddenモードではeffectsがアンマウントされるが、
+    // コンポーネント自体は保持されるため、真のマウント時のみカウント
+    console.log(`${name} mounted`);
     onMount?.();
-  }, [name, onMount]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="tab-content">
@@ -92,9 +94,9 @@ const ActivityMode = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
-  const handleMount = () => {
+  const handleMount = useCallback(() => {
     setMetrics((prev) => ({ ...prev, mountCount: prev.mountCount + 1 }));
-  };
+  }, []);
 
   return (
     <>
@@ -115,6 +117,7 @@ const ActivityMode = ({
 
 /**
  * 従来の条件付きレンダリング実装
+ * 条件によってコンポーネントがマウント/アンマウントされる
  */
 const ConditionalMode = ({
   activeTab,
@@ -151,9 +154,9 @@ const ConditionalMode = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
-  const handleMount = () => {
+  const handleMount = useCallback(() => {
     setMetrics((prev) => ({ ...prev, mountCount: prev.mountCount + 1 }));
-  };
+  }, []);
 
   return (
     <>
